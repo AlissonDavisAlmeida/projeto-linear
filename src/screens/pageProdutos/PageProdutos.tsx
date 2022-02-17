@@ -18,10 +18,10 @@ function PageProdutos() {
   const [mensagem, setmensagem] = useState('');
   const [filtro, setfiltro] = useState('');
 
-  const [itemsPorPagina, setitemsPorPagina] = useState(5);
   const [paginaAtual, setpaginaAtual] = useState(0);
-
-
+  
+  
+  const itemsPorPagina = 5
   const paginas = Math.ceil(listaProdutos.length / itemsPorPagina)
   const indiceInicial = paginaAtual * itemsPorPagina
   const indiceFinal = indiceInicial + itemsPorPagina
