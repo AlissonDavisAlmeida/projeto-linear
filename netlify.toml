@@ -1,0 +1,5 @@
+[[redirects]]
+    from="/*"
+    to = "http://testefrontend.linearsm.com.br/api/Produtos/Selecionar"
+    status = 200
+    force = true
