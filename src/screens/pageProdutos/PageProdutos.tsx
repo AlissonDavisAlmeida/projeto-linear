@@ -10,10 +10,22 @@ import PageCadastrar from "../pageCadastrar/PageCadastrar";
 function PageProdutos() {
 
   const [listaProdutos, setlistaProdutos] = useState<ProdutoInterface[]>([]);
+  const [produto, setproduto] = useState<ProdutoInterface>();
+
   const [isTelaCadastro, setisTelaCadastro] = useState(false);
-  const [mensagem, setmensagem] = useState('testando');
+  const [modoEdit, setmodoEdit] = useState(false);
+
+  const [mensagem, setmensagem] = useState('');
   const [filtro, setfiltro] = useState('');
 
+  const [itemsPorPagina, setitemsPorPagina] = useState(5);
+  const [paginaAtual, setpaginaAtual] = useState(0);
+
+
+  const paginas = Math.ceil(listaProdutos.length / itemsPorPagina)
+  const indiceInicial = paginaAtual * itemsPorPagina
+  const indiceFinal = indiceInicial + itemsPorPagina
+  
 
   useEffect(() => {
     axios.post("http://testefrontend.linearsm.com.br/api/Produtos/Selecionar")
@@ -46,13 +58,15 @@ function PageProdutos() {
   }
 
   const editarProduto = (id: number) => {
-
+      setproduto(listaProdutos.find(produto => produto.idProduto === id))
+      setisTelaCadastro(true)
+      setmodoEdit(true)
   }
 
-  const renderizarProdutos = listaProdutos?.map(produto => {
+  const renderizarProdutos = listaProdutos?.slice(indiceInicial, indiceFinal).map((produto, index) => {
     return (
       produto.descricao.toLowerCase().includes(filtro.toLowerCase()) || produto.codigo.toLowerCase().includes(filtro.toLowerCase()) ?
-        <Produto key={produto.codigo} func={excluirProduto} funcEdit={editarProduto} produto={produto} />
+        <Produto key={index} func={excluirProduto} funcEdit={editarProduto} produto={produto} />
         : null
     )
   })
@@ -61,9 +75,6 @@ function PageProdutos() {
     setmensagem("")
   }, 4000);
 
-  const visuzalizarEstoque = () => {
-
-  }
 
   const ordenarLista = (event : ChangeEvent<HTMLSelectElement>)=>{
     const ordenarPor = event.target.value
@@ -115,12 +126,33 @@ function PageProdutos() {
     axios.post("http://testefrontend.linearsm.com.br/api/Produtos/CadastrarAtualizar",produto).then(retorno=>{
             console.log(retorno);
             setisTelaCadastro(false)
+            setmodoEdit(false)
             setmensagem(retorno.data.message)  
           }).catch(erro=>{
             console.log(erro)
           })
           
   }
+
+ const renderizarProdutosEmEstoque = listaProdutos.map(produto=>{
+   if(produto.emEstoque){
+
+     return (
+       <li key={produto.codigo} className="list-group-item list-group-item-light">
+          <span className="flex justify-between font-bold text-2xl">
+
+          Código: {produto.codigo}
+          <span>
+          {produto.descricao}
+          </span>
+          </span>
+          
+        </li>
+      )
+    }else{
+      return null
+    }
+ })
 
   return (
     <div className={`flex flex-col  w-auto h-full mt-7 items-center select-none`}>
@@ -131,9 +163,31 @@ function PageProdutos() {
         {isTelaCadastro ? null : (<>
           <Button nome={`Cadastrar`} cor={`bg-blue-500`}
             func={() => setisTelaCadastro(true)} />
-          <Button nome={`Estoque`} className={`md:ml-2 ml-0`} cor={`bg-orange-500`}
-            func={visuzalizarEstoque} />
+          <button className={`md:ml-2 ml-0 bg-orange-500 p-3 rounded-lg
+                             text-white
+                            transition ease-in-out delay-100 hover:scale-110`} 
+                            type="button" data-bs-toggle="modal" data-bs-target="#modalEstoque">
+            Estoque
+          </button>
+
+          <div className="modal fade " id="modalEstoque" tabIndex={-1} aria-labelledby="ModalLabel" aria-hidden="true">
+              <div className="modal-dialog ">
+                <div className="modal-content rounded">
+                  <div className="modal-header ">
+                    <h5 className="modal-title" id="ModalLabel">Produtos em Estoque</h5>
+                    <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div className="modal-body bg-primary">
+                      <ul className="list-group">
+                          {renderizarProdutosEmEstoque || 'Não Existem produtos em estoque'}
+                      </ul>
+                  </div>
+                </div> 
+
+              </div>
+          </div>
         </>)}
+
         {renderizaMensagem && (
           <div className={`toast show w-3/4 fixed bottom-0 right-0 p-3 bg-warning z-10 ${mensagem==='' && 'hidden'}`} 
                       role={"alert"}  aria-live="assertive" aria-atomic="true">
@@ -146,6 +200,7 @@ function PageProdutos() {
               </div>
           </div>
         )}
+
         {!isTelaCadastro ? (
           <div className="w-full relative flex justify-end flex-col items-center">
             
@@ -166,7 +221,24 @@ function PageProdutos() {
         )
           : null}
       </div>
-      {isTelaCadastro ? <PageCadastrar funcSave={salvarProduto} setTela={() => setisTelaCadastro(false)} /> : renderizarProdutos}
+
+      {isTelaCadastro ? <PageCadastrar funcSave={salvarProduto} setTela={() => {
+        setmodoEdit(false)
+        setisTelaCadastro(false)
+      }} modoEdit={modoEdit} produto={produto}/> : renderizarProdutos
+      
+
+      }
+      {!isTelaCadastro? 
+      <div>
+      <ul className="pagination">
+        {Array.from(Array(paginas), (item, index)=> {
+          return <li className="page-item"><button className="page-link" onClick={()=>setpaginaAtual(index)}>{index+1}</button></li>
+        })}
+      
+      </ul>  
+      </div>
+      : null}
     </div>
   );
 }
