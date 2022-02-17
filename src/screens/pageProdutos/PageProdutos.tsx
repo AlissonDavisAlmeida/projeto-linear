@@ -28,7 +28,7 @@ function PageProdutos() {
   
 
   useEffect(() => {
-    axios.post("http://testefrontend.linearsm.com.br/api/Produtos/Selecionar")
+    axios.post("http://testefrontend.linearsm.com.br/api/Produtos/Selecionar/")
       .then(lista => {
        
         setlistaProdutos(lista.data.listaProdutos.sort((a:ProdutoInterface,b : ProdutoInterface)=>{
